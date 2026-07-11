@@ -9,6 +9,8 @@ function ReportsPage({
   setSortType,
   selectedReport,
   setSelectedReport,
+  favoriteOnly,
+  setFavoriteOnly,
 }) {
 
 
@@ -92,6 +94,29 @@ function ReportsPage({
 />
 
 <br />
+<button
+  onClick={() =>
+    setFavoriteOnly(!favoriteOnly)
+  }
+  style={{
+    width: "100%",
+    padding: "12px",
+    background: favoriteOnly
+      ? "#8B5CF6"
+      : "#fff",
+    color: favoriteOnly
+      ? "#fff"
+      : "#8B5CF6",
+    border: "2px solid #8B5CF6",
+    borderRadius: "12px",
+    cursor: "pointer",
+    fontWeight: "bold",
+  }}
+>
+  {favoriteOnly
+    ? "⭐ お気に入りのみ表示中"
+    : "☆ お気に入りのみ表示"}
+</button>
 <br />
 
 <select
@@ -129,15 +154,28 @@ function ReportsPage({
       {reports.map((report, index) => (
         <div
           key={index}
-          style={{
-  background: "#fff",
-  padding: "18px",
-  marginBottom: "15px",
-  borderRadius: "20px",
-  boxShadow:
-    "0 4px 15px rgba(0,0,0,0.06)",
-}}
-        >
+  style={{
+    background: "#fff",
+    padding: "18px",
+    marginBottom: "15px",
+    borderRadius: "20px",
+    boxShadow:
+      "0 4px 15px rgba(0,0,0,0.06)",
+    position: "relative",
+  }}
+>
+  {report.favorite && (
+  <div
+    style={{
+      position: "absolute",
+      top: "15px",
+      right: "18px",
+      fontSize: "24px",
+    }}
+  >
+    ⭐
+  </div>
+)}
        <div
   style={{
     fontSize: "20px",

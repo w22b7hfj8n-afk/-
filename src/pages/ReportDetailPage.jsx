@@ -4,6 +4,7 @@ function ReportDetailPage({
   setPage,
   editReport,
   deleteReport,
+  toggleFavorite,
 }) {
   if (!report) {
     return (
@@ -77,16 +78,43 @@ function ReportDetailPage({
             {report.date}
           </div>
 
-          <div
-            style={{
-              fontSize: "24px",
-              fontWeight: "bold",
-              color: "#8B5CF6",
-              marginBottom: "10px",
-            }}
-          >
-            💜 {report.member}
-          </div>
+<div
+  style={{
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: "8px",
+    marginBottom: "10px",
+  }}
+>
+  <div
+    style={{
+      fontSize: "24px",
+      fontWeight: "bold",
+      color: "#8B5CF6",
+    }}
+  >
+    💜 {report.member}
+  </div>
+
+  <span
+    onClick={() => {
+      const index = reports.findIndex(
+        (r) => r === report
+      );
+      toggleFavorite(index);
+    }}
+    style={{
+      fontSize: "24px",
+      color: report.favorite ? "#FBBF24" : "#CCC",
+      cursor: "pointer",
+      userSelect: "none",
+      transition: "0.2s",
+    }}
+  >
+    {report.favorite ? "⭐" : "☆"}
+  </span>
+</div>
 
           <div
             style={{

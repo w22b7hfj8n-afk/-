@@ -28,8 +28,6 @@ function App() {
 
   const [selectedReport, setSelectedReport] = useState(null);
   const [searchText, setSearchText] = useState("");
-  const [favoriteOnly, setFavoriteOnly] =
-  useState(false);
   const [sortType, setSortType] =
   useState("date");
   const [editingIndex, setEditingIndex] = useState(null);
@@ -69,10 +67,6 @@ const saveReport = () => {
     tickets,
     ending,
     messages,
-    favorite:
-      editingIndex !== null
-    ? reports[editingIndex].favorite
-    : false,
   };
 
   let savedReports;
@@ -125,24 +119,6 @@ setSelectedReport(null);
     setSelectedReport(null);
   }
   };
-
-  const toggleFavorite = (index) => {
-  const updatedReports = [...reports];
-
-  updatedReports[index].favorite =
-    !updatedReports[index].favorite;
-
-  localStorage.setItem(
-    "megreports",
-    JSON.stringify(updatedReports)
-  );
-
-  setReports(updatedReports);
-
-  // 詳細画面を開いたままでも星が切り替わる
-  setSelectedReport(updatedReports[index]);
-};
-
   const editReport = (report, index) => {
   setDate(report.date);
   setMember(report.member);
@@ -194,16 +170,12 @@ const addImage = (e) => {
   reader.readAsDataURL(file);
 };
 
-const filteredReports = reports.filter((report) => {
-  if (favoriteOnly && !report.favorite) {
-    return false;
-  }
-
+  const filteredReports = reports.filter((report) => {
   if (!searchText) return true;
 
   const messageText = report.messages
-    .map((msg) => msg.text || "")
-    .join(" ");
+  .map((msg) => msg.text || "")
+  .join(" ");
 
   return (
     report.member.includes(searchText) ||
@@ -214,15 +186,6 @@ const filteredReports = reports.filter((report) => {
 
 const sortedReports = [...filteredReports]
   .sort((a, b) => {
-
-    if (sortType === "date_desc") {
-      return new Date(b.date) - new Date(a.date);
-    }
-
-    if (sortType === "date_asc") {
-      return new Date(a.date) - new Date(b.date);
-    }
-
     if (sortType === "member") {
       const memberCompare =
         a.member.localeCompare(
@@ -234,10 +197,16 @@ const sortedReports = [...filteredReports]
         return memberCompare;
       }
 
-      return new Date(b.date) - new Date(a.date);
+      return (
+        new Date(b.date) -
+        new Date(a.date)
+      );
     }
 
-    return 0;
+    return (
+      new Date(b.date) -
+      new Date(a.date)
+    );
   });
 
 const totalReports = reports.length;
@@ -298,8 +267,6 @@ if (page === "reports") {
   return (
   <ReportsPage
     reports={sortedReports}
-    favoriteOnly={favoriteOnly}
-    setFavoriteOnly={setFavoriteOnly}
     setPage={setPage}
     editReport={editReport}
     deleteReport={deleteReport}
@@ -334,7 +301,6 @@ if (page === "reportDetail") {
       setPage={setPage}
       editReport={editReport}
       deleteReport={deleteReport}
-      toggleFavorite={toggleFavorite}
     />
   );
 }
