@@ -120,16 +120,18 @@ function ReportDetailPage({
             <div>
               {msg.speaker === "メンバー" && (
                 <div
-                  style={{
-                    fontSize: "13px",
-                    fontWeight: "bold",
-                    marginBottom: "5px",
-                    color: "#666",
-                    paddingLeft: "5px",
-                  }}
-                >
-                  {report.member}
-                </div>
+  style={{
+    fontSize: "13px",
+    fontWeight: "bold",
+    marginBottom: "5px",
+    color: "#666",
+    paddingLeft: "5px",
+    textAlign: "left",
+    width: "100%",
+  }}
+>
+  {report.member}
+</div>
               )}
 
               <div
