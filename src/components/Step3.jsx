@@ -125,6 +125,7 @@ const saveImage = async () => {
 lineHeight: "1.7",
 boxShadow:
   "0 2px 10px rgba(0,0,0,0.05)",
+textAlign: "left",
           }}
         >
           {msg.type === "image" ? (

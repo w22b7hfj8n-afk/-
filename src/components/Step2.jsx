@@ -135,6 +135,8 @@ color: "#8B5CF6",
             maxWidth: "250px",
             boxShadow:
               "0 2px 10px rgba(0,0,0,0.05)",
+
+            textAlign: "left",  
           }}
         >
           {msg.type === "image" ? (
