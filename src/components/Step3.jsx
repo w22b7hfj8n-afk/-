@@ -17,14 +17,51 @@ function Step3({
 const previewRef = useRef(null);
 
 const saveImage = async () => {
-  const canvas = await html2canvas(previewRef.current);
+  const canvas = await html2canvas(previewRef.current, {
+    scale: 2,
+    backgroundColor: "#fff",
+  });
 
-  const link = document.createElement("a");
-  link.download = `${member}_${date}.png`;
-  link.href = canvas.toDataURL();
-  link.click();
+  const image = canvas.toDataURL("image/png");
+
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(
+    navigator.userAgent
+  );
+
+  if (isMobile) {
+    // スマホ：画像表示して保存してもらう
+    const newWindow = window.open();
+
+    if (newWindow) {
+      newWindow.document.write(
+        `
+        <html>
+          <head>
+            <title>MegRepo</title>
+            <meta name="viewport" content="width=device-width">
+          </head>
+          <body style="margin:0; background:#fff;">
+            <img
+              src="${image}"
+              style="width:100%; height:auto;"
+            />
+          </body>
+        </html>
+        `
+      );
+
+      newWindow.document.close();
+    }
+  } else {
+    // PC：自動ダウンロード
+    const link = document.createElement("a");
+
+    link.download = `${member}_${date}.png`;
+    link.href = image;
+
+    link.click();
+  }
 };
-
 
   return (
     <>
