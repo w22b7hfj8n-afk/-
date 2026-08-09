@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import HomePage from "./pages/HomePage";
 import ReportsPage from "./pages/ReportsPage";
 import StatsPage from "./pages/StatsPage";
@@ -107,6 +107,35 @@ setSelectedReport(null);
 
   alert("保存しました！");
 };
+
+useEffect(() => {
+  const handleMessage = (event) => {
+    if (event.origin !== window.location.origin) {
+      return;
+    }
+
+    if (
+      event.data?.type ===
+      "MEGREPO_SAVE_REPORT"
+    ) {
+      saveReport();
+    }
+  };
+
+  window.addEventListener(
+    "message",
+    handleMessage
+  );
+
+  return () => {
+    window.removeEventListener(
+      "message",
+      handleMessage
+    );
+  };
+}, [saveReport]);
+
+
   const deleteReport = (indexToDelete) => {
   const updatedReports = reports.filter(
     (_, index) => index !== indexToDelete
