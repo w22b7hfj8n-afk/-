@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import html2canvas from "html2canvas";
 
 function Step3({
@@ -15,282 +15,325 @@ function Step3({
 }) {
   const previewRef = useRef(null);
 
-  const saveImage = async () => {
-    const isMobile =
-      /iPhone|iPad|iPod|Android/i.test(
-        navigator.userAgent
-      );
-
-    // =========================
-    // スマホ
-    // =========================
-    if (isMobile) {
-      // タップ直後に別タブを開く
-      const newWindow = window.open(
-        "",
-        "_blank"
-      );
-
-      if (!newWindow) {
-        alert(
-          "別タブを開けませんでした。ポップアップを許可してください。"
-        );
+  // ========================================
+  // 別タブからの「レポ保存」命令を受け取る
+  // ========================================
+  useEffect(() => {
+    const handleMessage = (event) => {
+      if (event.origin !== window.location.origin) {
         return;
       }
 
-      const canvas = await html2canvas(
-        previewRef.current,
-        {
-          scale: 2,
-          backgroundColor: "#fff",
-        }
+      if (
+        event.data?.type ===
+        "MEGREPO_SAVE_REPORT"
+      ) {
+        saveReport();
+      }
+    };
+
+    window.addEventListener(
+      "message",
+      handleMessage
+    );
+
+    return () => {
+      window.removeEventListener(
+        "message",
+        handleMessage
       );
+    };
+  }, [saveReport]);
+
+  // ========================================
+  // 画像保存
+  // ========================================
+  const saveImage = async () => {
+    try {
+      const isMobile =
+        /iPhone|iPad|iPod|Android/i.test(
+          navigator.userAgent
+        );
+
+      // ======================================
+      // スマホ
+      // ======================================
+      if (isMobile) {
+        // ユーザーのボタン操作直後に
+        // 先に別タブを開いておく
+        const newWindow = window.open(
+          "",
+          "_blank"
+        );
+
+        if (!newWindow) {
+          alert(
+            "別タブを開けませんでした。\nブラウザのポップアップブロックを確認してください。"
+          );
+          return;
+        }
+
+        // 画像生成
+        const canvas =
+          await html2canvas(
+            previewRef.current,
+            {
+              scale: 2,
+              backgroundColor: "#fff",
+            }
+          );
+
+        const image =
+          canvas.toDataURL("image/png");
+
+        // 別タブの内容
+        newWindow.document.open();
+
+        newWindow.document.write(`
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta charset="UTF-8">
+              <meta
+                name="viewport"
+                content="width=device-width, initial-scale=1"
+              >
+              <title>MegRepo - 画像保存</title>
+            </head>
+
+            <body
+              style="
+                margin:0;
+                padding:20px;
+                background:#f8f9ff;
+                font-family:sans-serif;
+                text-align:center;
+              "
+            >
+
+              <h2
+                style="
+                  color:#8B5CF6;
+                  margin-top:10px;
+                "
+              >
+                📸 投稿用画像
+              </h2>
+
+              <p
+                style="
+                  color:#666;
+                  font-size:14px;
+                  line-height:1.7;
+                "
+              >
+                画像を長押しして<br>
+                写真に保存してください
+              </p>
+
+              <img
+                src="${image}"
+                alt="MegRepo"
+                style="
+                  width:100%;
+                  max-width:600px;
+                  height:auto;
+                  border-radius:12px;
+                  box-shadow:
+                    0 4px 20px
+                    rgba(0,0,0,0.08);
+                "
+              >
+
+              <div
+                style="
+                  margin-top:25px;
+                "
+              >
+
+                <button
+                  id="saveReportButton"
+                  style="
+                    width:100%;
+                    max-width:400px;
+                    padding:15px;
+                    background:#8B5CF6;
+                    color:#fff;
+                    border:none;
+                    border-radius:14px;
+                    font-size:16px;
+                    font-weight:bold;
+                  "
+                >
+                  💾 ${
+                    editingIndex !== null
+                      ? "レポを更新する"
+                      : "レポを保存する"
+                  }
+                </button>
+
+              </div>
+
+              <p
+                id="saveMessage"
+                style="
+                  color:#10B981;
+                  font-weight:bold;
+                  margin-top:15px;
+                  display:none;
+                "
+              >
+                ✅ メグレポに保存しました！
+              </p>
+
+              <button
+                id="backButton"
+                style="
+                  width:100%;
+                  max-width:400px;
+                  padding:14px;
+                  margin-top:10px;
+                  background:#fff;
+                  color:#333;
+                  border:1px solid #ddd;
+                  border-radius:14px;
+                  font-size:15px;
+                  font-weight:bold;
+                "
+              >
+                ← メグレポに戻る
+              </button>
+
+              <script>
+                const saveButton =
+                  document.getElementById(
+                    "saveReportButton"
+                  );
+
+                const saveMessage =
+                  document.getElementById(
+                    "saveMessage"
+                  );
+
+                const backButton =
+                  document.getElementById(
+                    "backButton"
+                  );
+
+                // ============================
+                // レポを保存
+                // ============================
+                saveButton.addEventListener(
+                  "click",
+                  function () {
+
+                    if (window.opener) {
+
+                      window.opener.postMessage(
+                        {
+                          type:
+                            "MEGREPO_SAVE_REPORT"
+                        },
+                        window.location.origin
+                      );
+
+                      saveButton.disabled = true;
+
+                      saveButton.style.opacity =
+                        "0.6";
+
+                      saveMessage.style.display =
+                        "block";
+                    } else {
+
+                      alert(
+                        "元のメグレポ画面が見つかりません。"
+                      );
+                    }
+                  }
+                );
+
+                // ============================
+                // メグレポに戻る
+                // ============================
+                backButton.addEventListener(
+                  "click",
+                  function () {
+
+                    if (window.opener) {
+
+                      window.opener.focus();
+
+                      // 別タブを閉じる
+                      window.close();
+
+                    } else {
+
+                      alert(
+                        "元のメグレポ画面に戻ってください。"
+                      );
+
+                    }
+                  }
+                );
+              </script>
+
+            </body>
+          </html>
+        `);
+
+        newWindow.document.close();
+
+        return;
+      }
+
+      // ======================================
+      // PC
+      // ======================================
+
+      const canvas =
+        await html2canvas(
+          previewRef.current,
+          {
+            scale: 2,
+            backgroundColor: "#fff",
+          }
+        );
 
       const image =
         canvas.toDataURL("image/png");
 
-      newWindow.document.write(`
-        <html>
-          <head>
-            <title>MegRepo - 画像保存</title>
+      const link =
+        document.createElement("a");
 
-            <meta
-              name="viewport"
-              content="width=device-width, initial-scale=1"
-            >
-          </head>
+      link.download =
+        `${member}_${date}.png`;
 
-          <body
-            style="
-              margin:0;
-              padding:20px;
-              background:#f8f9ff;
-              font-family:sans-serif;
-              text-align:center;
-            "
-          >
+      link.href = image;
 
-            <h2
-              style="
-                color:#8B5CF6;
-                margin-top:10px;
-              "
-            >
-              📸 投稿用画像
-            </h2>
+      link.click();
 
-            <p
-              style="
-                color:#666;
-                font-size:14px;
-                line-height:1.6;
-              "
-            >
-              画像を長押しして<br />
-              写真に保存してください
-            </p>
+    } catch (error) {
+      console.error(
+        "画像保存エラー:",
+        error
+      );
 
-            <img
-              src="${image}"
-              alt="MegRepo"
-              style="
-                width:100%;
-                max-width:600px;
-                height:auto;
-                border-radius:12px;
-                box-shadow:
-                  0 4px 20px
-                  rgba(0,0,0,0.08);
-              "
-            />
-
-            <div
-              style="
-                margin-top:25px;
-              "
-            >
-
-              <button
-                id="saveReportButton"
-                style="
-                  width:100%;
-                  max-width:400px;
-                  padding:15px;
-                  background:#8B5CF6;
-                  color:#fff;
-                  border:none;
-                  border-radius:14px;
-                  font-size:16px;
-                  font-weight:bold;
-                "
-              >
-                💾 ${
-                  editingIndex !== null
-                    ? "レポを更新する"
-                    : "レポを保存する"
-                }
-              </button>
-
-            </div>
-
-            <p
-              id="saveMessage"
-              style="
-                color:#10B981;
-                font-weight:bold;
-                margin-top:15px;
-                display:none;
-              "
-            >
-              ✅ 保存しました！
-            </p>
-
-            <button
-              id="backButton"
-              style="
-                width:100%;
-                max-width:400px;
-                padding:14px;
-                margin-top:10px;
-                background:#fff;
-                color:#333;
-                border:1px solid #ddd;
-                border-radius:14px;
-                font-size:15px;
-                font-weight:bold;
-              "
-            >
-              ← メグレポに戻る
-            </button>
-
-            <script>
-
-              const saveButton =
-                document.getElementById(
-                  "saveReportButton"
-                );
-
-              const saveMessage =
-                document.getElementById(
-                  "saveMessage"
-                );
-
-              const backButton =
-                document.getElementById(
-                  "backButton"
-                );
-
-
-              // =========================
-              // レポ保存
-              // =========================
-
-              saveButton.addEventListener(
-                "click",
-                () => {
-
-                  if (window.opener) {
-
-                    window.opener.postMessage(
-                      {
-                        type:
-                          "MEGREPO_SAVE_REPORT"
-                      },
-                      window.location.origin
-                    );
-
-                    saveButton.disabled =
-                      true;
-
-                    saveButton.style.opacity =
-                      "0.6";
-
-                    saveMessage.style.display =
-                      "block";
-
-                  } else {
-
-                    alert(
-                      "元のメグレポ画面を確認してください。"
-                    );
-
-                  }
-
-                }
-              );
-
-
-              // =========================
-              // メグレポに戻る
-              // =========================
-
-              backButton.addEventListener(
-                "click",
-                () => {
-
-                  if (window.opener) {
-
-                    window.opener.focus();
-
-                  }
-
-                  setTimeout(() => {
-                    window.close();
-                  }, 100);
-
-                }
-              );
-
-            </script>
-
-          </body>
-        </html>
-      `);
-
-      newWindow.document.close();
-
-      return;
+      alert(
+        "画像の保存に失敗しました。"
+      );
     }
-
-
-    // =========================
-    // PC
-    // =========================
-
-    const canvas = await html2canvas(
-      previewRef.current,
-      {
-        scale: 2,
-        backgroundColor: "#fff",
-      }
-    );
-
-    const image =
-      canvas.toDataURL("image/png");
-
-    const link =
-      document.createElement("a");
-
-    link.download =
-      `${member}_${date}.png`;
-
-    link.href = image;
-
-    link.click();
   };
-
 
   return (
     <>
-
       <h2>
         📸 投稿用プレビュー
       </h2>
 
-
-      {/* =========================
+      {/* ==================================
           プレビュー本体
-      ========================= */}
+      ================================== */}
 
       <div
         ref={previewRef}
@@ -300,6 +343,8 @@ function Step3({
           borderRadius: "10px",
         }}
       >
+
+        {/* ヘッダー */}
 
         <div
           style={{
@@ -318,7 +363,6 @@ function Step3({
             {date}
           </div>
 
-
           <div
             style={{
               fontSize: "24px",
@@ -330,7 +374,6 @@ function Step3({
             💜 {member}
           </div>
 
-
           <div
             style={{
               background: "#f3e8ff",
@@ -341,161 +384,148 @@ function Step3({
             }}
           >
             🎪 {eventName}
-            {" "}
-            |{" "}
+            {" | "}
             {part}部
-            {" "}
-            |{" "}
+            {" | "}
             🎫 {tickets}枚
           </div>
 
         </div>
 
-
-        {/* =========================
+        {/* ==================================
             会話
-        ========================= */}
+        ================================== */}
 
-        {messages.map((msg, index) => (
+        {messages.map(
+          (msg, index) => (
 
-          <div
-            key={index}
-            style={{
-              display: "flex",
-              justifyContent:
-                msg.speaker === "自分"
-                  ? "flex-end"
-                  : "flex-start",
-              marginBottom: "25px",
-            }}
-          >
+            <div
+              key={index}
+              style={{
+                display: "flex",
+                justifyContent:
+                  msg.speaker === "自分"
+                    ? "flex-end"
+                    : "flex-start",
+                marginBottom: "25px",
+              }}
+            >
 
-            <div>
+              <div>
 
-              {msg.speaker === "メンバー" && (
+                {msg.speaker ===
+                  "メンバー" && (
+                  <div
+                    style={{
+                      fontSize: "14px",
+                      marginBottom: "5px",
+                      textAlign: "left",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {member}
+                  </div>
+                )}
 
                 <div
                   style={{
-                    fontSize: "14px",
-                    marginBottom: "5px",
+                    border:
+                      msg.speaker ===
+                      "メンバー"
+                        ? "2px solid #d9534f"
+                        : "2px solid #999",
+
+                    borderRadius: "30px",
+
+                    padding:
+                      "12px 20px",
+
+                    background: "#fff",
+
+                    maxWidth: "300px",
+
+                    fontSize: "16px",
+
+                    lineHeight: "1.7",
+
+                    boxShadow:
+                      "0 2px 10px rgba(0,0,0,0.05)",
+
                     textAlign: "left",
-                    fontWeight: "bold",
                   }}
                 >
-                  {member}
+
+                  {msg.type ===
+                  "image" ? (
+
+                    <img
+                      src={msg.image}
+                      alt=""
+                      style={{
+                        maxWidth:
+                          "200px",
+                        borderRadius:
+                          "10px",
+                      }}
+                    />
+
+                  ) : (
+
+                    msg.text
+
+                  )}
+
                 </div>
-
-              )}
-
-
-              <div
-                style={{
-                  border:
-                    msg.speaker === "メンバー"
-                      ? "2px solid #d9534f"
-                      : "2px solid #999",
-
-                  borderRadius: "30px",
-
-                  padding: "12px 20px",
-
-                  background: "#fff",
-
-                  maxWidth: "300px",
-
-                  fontSize: "16px",
-
-                  lineHeight: "1.7",
-
-                  boxShadow:
-                    "0 2px 10px rgba(0,0,0,0.05)",
-
-                  textAlign: "left",
-                }}
-              >
-
-                {msg.type === "image" ? (
-
-                  <img
-                    src={msg.image}
-                    alt=""
-                    style={{
-                      maxWidth: "200px",
-                      borderRadius: "10px",
-                    }}
-                  />
-
-                ) : (
-
-                  msg.text
-
-                )}
 
               </div>
 
             </div>
 
-          </div>
+          )
+        )}
 
-        ))}
-
-
-        {/* =========================
+        {/* ==================================
             終了
-        ========================= */}
+        ================================== */}
 
         <div
           style={{
             textAlign: "center",
-            color: "#bbb",
-            marginTop: "30px",
-            fontSize: "26px",
+            marginTop: "40px",
           }}
         >
 
           <div
             style={{
-              textAlign: "center",
-              marginTop: "40px",
+              color: "#bbb",
+              fontSize: "16px",
+              marginBottom: "10px",
             }}
           >
+            {ending}
+          </div>
 
-            <div
-              style={{
-                color: "#bbb",
-                fontSize: "16px",
-                marginBottom: "10px",
-              }}
-            >
-              {ending}
-            </div>
-
-
-            <div
-              style={{
-                fontSize: "6px",
-                color: "#999",
-                letterSpacing: "1px",
-              }}
-            >
-              Created with MegRepo
-            </div>
-
+          <div
+            style={{
+              fontSize: "6px",
+              color: "#999",
+              letterSpacing: "1px",
+            }}
+          >
+            Created with MegRepo
           </div>
 
         </div>
 
       </div>
 
-
       <hr />
 
       <br />
 
-
-      {/* =========================
+      {/* ==================================
           ボタン
-      ========================= */}
+      ================================== */}
 
       <div
         style={{
@@ -526,7 +556,6 @@ function Step3({
           ← 戻る
         </button>
 
-
         {/* 画像保存 */}
 
         <button
@@ -544,7 +573,6 @@ function Step3({
         >
           📸 画像保存
         </button>
-
 
         {/* レポ保存 */}
 
@@ -570,7 +598,6 @@ function Step3({
         </button>
 
       </div>
-
     </>
   );
 }
