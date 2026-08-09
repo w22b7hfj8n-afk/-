@@ -21,30 +21,39 @@ function Step3({
         navigator.userAgent
       );
 
-    // スマホの場合は、先に別タブを開いておく
-    // （後からwindow.openするとポップアップとして
-    //  ブロックされる可能性があるため）
-    let newWindow = null;
-
+    // =========================
+    // スマホ
+    // =========================
     if (isMobile) {
-      newWindow = window.open("", "_blank");
-    }
+      // タップ直後に別タブを開く
+      const newWindow = window.open(
+        "",
+        "_blank"
+      );
 
-    const canvas = await html2canvas(
-      previewRef.current,
-      {
-        scale: 2,
-        backgroundColor: "#fff",
+      if (!newWindow) {
+        alert(
+          "別タブを開けませんでした。ポップアップを許可してください。"
+        );
+        return;
       }
-    );
 
-    const image = canvas.toDataURL("image/png");
+      const canvas = await html2canvas(
+        previewRef.current,
+        {
+          scale: 2,
+          backgroundColor: "#fff",
+        }
+      );
 
-    if (isMobile && newWindow) {
+      const image =
+        canvas.toDataURL("image/png");
+
       newWindow.document.write(`
         <html>
           <head>
             <title>MegRepo - 画像保存</title>
+
             <meta
               name="viewport"
               content="width=device-width, initial-scale=1"
@@ -89,7 +98,9 @@ function Step3({
                 max-width:600px;
                 height:auto;
                 border-radius:12px;
-                box-shadow:0 4px 20px rgba(0,0,0,0.08);
+                box-shadow:
+                  0 4px 20px
+                  rgba(0,0,0,0.08);
               "
             />
 
@@ -98,6 +109,7 @@ function Step3({
                 margin-top:25px;
               "
             >
+
               <button
                 id="saveReportButton"
                 style="
@@ -110,7 +122,6 @@ function Step3({
                   border-radius:14px;
                   font-size:16px;
                   font-weight:bold;
-                  cursor:pointer;
                 "
               >
                 💾 ${
@@ -119,6 +130,7 @@ function Step3({
                     : "レポを保存する"
                 }
               </button>
+
             </div>
 
             <p
@@ -145,13 +157,14 @@ function Step3({
                 border:1px solid #ddd;
                 border-radius:14px;
                 font-size:15px;
-                cursor:pointer;
+                font-weight:bold;
               "
             >
               ← メグレポに戻る
             </button>
 
             <script>
+
               const saveButton =
                 document.getElementById(
                   "saveReportButton"
@@ -167,36 +180,67 @@ function Step3({
                   "backButton"
                 );
 
+
+              // =========================
+              // レポ保存
+              // =========================
+
               saveButton.addEventListener(
                 "click",
                 () => {
+
                   if (window.opener) {
+
                     window.opener.postMessage(
                       {
-                        type: "MEGREPO_SAVE_REPORT"
+                        type:
+                          "MEGREPO_SAVE_REPORT"
                       },
                       window.location.origin
                     );
 
-                    saveButton.disabled = true;
-                    saveButton.style.opacity = "0.6";
+                    saveButton.disabled =
+                      true;
+
+                    saveButton.style.opacity =
+                      "0.6";
 
                     saveMessage.style.display =
                       "block";
+
+                  } else {
+
+                    alert(
+                      "元のメグレポ画面を確認してください。"
+                    );
+
                   }
+
                 }
               );
+
+
+              // =========================
+              // メグレポに戻る
+              // =========================
 
               backButton.addEventListener(
                 "click",
                 () => {
+
                   if (window.opener) {
+
                     window.opener.focus();
+
                   }
 
-                  window.close();
+                  setTimeout(() => {
+                    window.close();
+                  }, 100);
+
                 }
               );
+
             </script>
 
           </body>
@@ -204,22 +248,49 @@ function Step3({
       `);
 
       newWindow.document.close();
-    } else {
-      // PC：自動ダウンロード
-      const link = document.createElement("a");
 
-      link.download =
-        `${member}_${date}.png`;
-
-      link.href = image;
-
-      link.click();
+      return;
     }
+
+
+    // =========================
+    // PC
+    // =========================
+
+    const canvas = await html2canvas(
+      previewRef.current,
+      {
+        scale: 2,
+        backgroundColor: "#fff",
+      }
+    );
+
+    const image =
+      canvas.toDataURL("image/png");
+
+    const link =
+      document.createElement("a");
+
+    link.download =
+      `${member}_${date}.png`;
+
+    link.href = image;
+
+    link.click();
   };
+
 
   return (
     <>
-      <h2>📸 投稿用プレビュー</h2>
+
+      <h2>
+        📸 投稿用プレビュー
+      </h2>
+
+
+      {/* =========================
+          プレビュー本体
+      ========================= */}
 
       <div
         ref={previewRef}
@@ -229,12 +300,14 @@ function Step3({
           borderRadius: "10px",
         }}
       >
+
         <div
           style={{
             textAlign: "center",
             marginBottom: "30px",
           }}
         >
+
           <div
             style={{
               fontSize: "14px",
@@ -244,6 +317,7 @@ function Step3({
           >
             {date}
           </div>
+
 
           <div
             style={{
@@ -255,6 +329,7 @@ function Step3({
           >
             💜 {member}
           </div>
+
 
           <div
             style={{
@@ -273,9 +348,16 @@ function Step3({
             |{" "}
             🎫 {tickets}枚
           </div>
+
         </div>
 
+
+        {/* =========================
+            会話
+        ========================= */}
+
         {messages.map((msg, index) => (
+
           <div
             key={index}
             style={{
@@ -287,8 +369,11 @@ function Step3({
               marginBottom: "25px",
             }}
           >
+
             <div>
+
               {msg.speaker === "メンバー" && (
+
                 <div
                   style={{
                     fontSize: "14px",
@@ -299,7 +384,9 @@ function Step3({
                 >
                   {member}
                 </div>
+
               )}
+
 
               <div
                 style={{
@@ -307,18 +394,28 @@ function Step3({
                     msg.speaker === "メンバー"
                       ? "2px solid #d9534f"
                       : "2px solid #999",
+
                   borderRadius: "30px",
+
                   padding: "12px 20px",
+
                   background: "#fff",
+
                   maxWidth: "300px",
+
                   fontSize: "16px",
+
                   lineHeight: "1.7",
+
                   boxShadow:
                     "0 2px 10px rgba(0,0,0,0.05)",
+
                   textAlign: "left",
                 }}
               >
+
                 {msg.type === "image" ? (
+
                   <img
                     src={msg.image}
                     alt=""
@@ -327,13 +424,25 @@ function Step3({
                       borderRadius: "10px",
                     }}
                   />
+
                 ) : (
+
                   msg.text
+
                 )}
+
               </div>
+
             </div>
+
           </div>
+
         ))}
+
+
+        {/* =========================
+            終了
+        ========================= */}
 
         <div
           style={{
@@ -343,12 +452,14 @@ function Step3({
             fontSize: "26px",
           }}
         >
+
           <div
             style={{
               textAlign: "center",
               marginTop: "40px",
             }}
           >
+
             <div
               style={{
                 color: "#bbb",
@@ -359,6 +470,7 @@ function Step3({
               {ending}
             </div>
 
+
             <div
               style={{
                 fontSize: "6px",
@@ -368,13 +480,22 @@ function Step3({
             >
               Created with MegRepo
             </div>
+
           </div>
+
         </div>
+
       </div>
+
 
       <hr />
 
       <br />
+
+
+      {/* =========================
+          ボタン
+      ========================= */}
 
       <div
         style={{
@@ -383,16 +504,13 @@ function Step3({
           marginTop: "20px",
         }}
       >
+
+        {/* 戻る */}
+
         <button
-          onClick={() => setInputStep(2)}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform =
-              "translateY(-2px)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform =
-              "translateY(0)";
-          }}
+          onClick={() =>
+            setInputStep(2)
+          }
           style={{
             flex: 1,
             padding: "14px",
@@ -407,6 +525,9 @@ function Step3({
         >
           ← 戻る
         </button>
+
+
+        {/* 画像保存 */}
 
         <button
           onClick={saveImage}
@@ -424,16 +545,11 @@ function Step3({
           📸 画像保存
         </button>
 
+
+        {/* レポ保存 */}
+
         <button
           onClick={saveReport}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform =
-              "translateY(-2px)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform =
-              "translateY(0)";
-          }}
           style={{
             flex: 2,
             padding: "14px",
@@ -452,7 +568,9 @@ function Step3({
             ? "更新する"
             : "保存する"}
         </button>
+
       </div>
+
     </>
   );
 }
