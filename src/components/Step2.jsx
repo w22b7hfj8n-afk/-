@@ -33,59 +33,8 @@ color: "#8B5CF6",
 💬 会話入力 </h2>
 
 
-  <div
-    style={{
-      display: "flex",
-      gap: "10px",
-      marginBottom: "20px",
-    }}
-  >
-    <button
-      onClick={() =>
-        setSpeaker("自分")
-      }
-      style={{
-        flex: 1,
-        padding: "12px",
-        borderRadius: "12px",
-        border: "none",
-        cursor: "pointer",
-        background:
-          speaker === "自分"
-            ? "#8B5CF6"
-            : "#eee",
-        color:
-          speaker === "自分"
-            ? "#fff"
-            : "#333",
-      }}
-    >
-      🙋 自分
-    </button>
 
-    <button
-      onClick={() =>
-        setSpeaker("メンバー")
-      }
-      style={{
-        flex: 1,
-        padding: "12px",
-        borderRadius: "12px",
-        border: "none",
-        cursor: "pointer",
-        background:
-          speaker === "メンバー"
-            ? "#EC4899"
-            : "#eee",
-        color:
-          speaker === "メンバー"
-            ? "#fff"
-            : "#333",
-      }}
-    >
-      💜 メンバー
-    </button>
-  </div>
+  
 
   <div
     style={{
@@ -188,6 +137,62 @@ color: "#8B5CF6",
       </div>
     ))}
   </div>
+
+  <div
+    style={{
+      display: "flex",
+      gap: "10px",
+      marginBottom: "15px",
+    }}
+  >
+    <button
+      onClick={() =>
+        setSpeaker("メンバー")
+      }
+      style={{
+        flex: 1,
+        padding: "12px",
+        borderRadius: "12px",
+        border: "none",
+        cursor: "pointer",
+        background:
+          speaker === "メンバー"
+            ? "#EC4899"
+            : "#eee",
+        color:
+          speaker === "メンバー"
+            ? "#fff"
+            : "#333",
+      }}
+    >
+      💜 メンバー
+    </button>
+
+    <button
+      onClick={() =>
+        setSpeaker("自分")
+      }
+      style={{
+        flex: 1,
+        padding: "12px",
+        borderRadius: "12px",
+        border: "none",
+        cursor: "pointer",
+        background:
+          speaker === "自分"
+            ? "#8B5CF6"
+            : "#eee",
+        color:
+          speaker === "自分"
+            ? "#fff"
+            : "#333",
+      }}
+    >
+      🙋 自分
+    </button>
+  </div>
+
+
 
   <textarea
     rows="3"
