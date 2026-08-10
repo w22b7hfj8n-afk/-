@@ -16,7 +16,7 @@ function Step3({
   const previewRef = useRef(null);
 
   // ========================================
-  // 別タブからの「レポ保存」命令を受け取る
+  // 別タブからの「レポ保存」を受け取る
   // ========================================
   useEffect(() => {
     const handleMessage = (event) => {
@@ -25,8 +25,7 @@ function Step3({
       }
 
       if (
-        event.data?.type ===
-        "MEGREPO_SAVE_REPORT"
+        event.data?.type === "MEGREPO_SAVE_REPORT"
       ) {
         saveReport();
       }
@@ -59,8 +58,11 @@ function Step3({
       // スマホ
       // ======================================
       if (isMobile) {
-        // ユーザーのボタン操作直後に
-        // 先に別タブを開いておく
+        // 元のメグレポのURLを記録
+        const openerUrl =
+          window.location.href;
+
+        // ユーザー操作直後に別タブを開く
         const newWindow = window.open(
           "",
           "_blank"
@@ -86,19 +88,27 @@ function Step3({
         const image =
           canvas.toDataURL("image/png");
 
+        // ====================================
         // 別タブの内容
+        // ====================================
+
         newWindow.document.open();
 
         newWindow.document.write(`
           <!DOCTYPE html>
+
           <html>
             <head>
               <meta charset="UTF-8">
+
               <meta
                 name="viewport"
                 content="width=device-width, initial-scale=1"
               >
-              <title>MegRepo - 画像保存</title>
+
+              <title>
+                MegRepo - 画像保存
+              </title>
             </head>
 
             <body
@@ -131,6 +141,10 @@ function Step3({
                 写真に保存してください
               </p>
 
+              <!-- =========================
+                   投稿用画像
+              ========================== -->
+
               <img
                 src="${image}"
                 alt="MegRepo"
@@ -144,6 +158,10 @@ function Step3({
                     rgba(0,0,0,0.08);
                 "
               >
+
+              <!-- =========================
+                   レポ保存
+              ========================== -->
 
               <div
                 style="
@@ -174,6 +192,8 @@ function Step3({
 
               </div>
 
+              <!-- 保存メッセージ -->
+
               <p
                 id="saveMessage"
                 style="
@@ -183,8 +203,12 @@ function Step3({
                   display:none;
                 "
               >
-                ✅ メグレポに保存しました！
+                ✅ 保存しました！
               </p>
+
+              <!-- =========================
+                   メグレポに戻る
+              ========================== -->
 
               <button
                 id="backButton"
@@ -204,7 +228,12 @@ function Step3({
                 ← メグレポに戻る
               </button>
 
+
               <script>
+
+                const openerUrl =
+                  ${JSON.stringify(openerUrl)};
+
                 const saveButton =
                   document.getElementById(
                     "saveReportButton"
@@ -220,13 +249,16 @@ function Step3({
                     "backButton"
                   );
 
-                // ============================
-                // レポを保存
-                // ============================
+
+                // =================================
+                // レポ保存
+                // =================================
+
                 saveButton.addEventListener(
                   "click",
                   function () {
 
+                    // 元のメグレポへ保存命令
                     if (window.opener) {
 
                       window.opener.postMessage(
@@ -237,45 +269,59 @@ function Step3({
                         window.location.origin
                       );
 
-                      saveButton.disabled = true;
-
-                      saveButton.style.opacity =
-                        "0.6";
-
-                      saveMessage.style.display =
-                        "block";
-                    } else {
-
-                      alert(
-                        "元のメグレポ画面が見つかりません。"
-                      );
                     }
+
+                    // ボタンを無効化
+                    saveButton.disabled = true;
+
+                    saveButton.style.opacity =
+                      "0.6";
+
+                    // 保存完了表示
+                    saveMessage.style.display =
+                      "block";
+
+
+                    // =================================
+                    // 少し待ってから
+                    // このタブをメグレポに移動
+                    // =================================
+
+                    setTimeout(
+                      function () {
+
+                        window.location.href =
+                          openerUrl;
+
+                      },
+                      500
+                    );
+
                   }
                 );
 
-                // ============================
+
+                // =================================
                 // メグレポに戻る
-                // ============================
+                // =================================
+
                 backButton.addEventListener(
                   "click",
                   function () {
 
+                    // 元のタブが存在するなら前面へ
                     if (window.opener) {
-
                       window.opener.focus();
-
-                      // 別タブを閉じる
-                      window.close();
-
-                    } else {
-
-                      alert(
-                        "元のメグレポ画面に戻ってください。"
-                      );
-
                     }
+
+                    // window.close()には頼らず、
+                    // このタブ自体をメグレポに戻す
+                    window.location.href =
+                      openerUrl;
+
                   }
                 );
+
               </script>
 
             </body>
@@ -286,6 +332,7 @@ function Step3({
 
         return;
       }
+
 
       // ======================================
       // PC
@@ -314,6 +361,7 @@ function Step3({
       link.click();
 
     } catch (error) {
+
       console.error(
         "画像保存エラー:",
         error
@@ -325,11 +373,13 @@ function Step3({
     }
   };
 
+
   return (
     <>
       <h2>
         📸 投稿用プレビュー
       </h2>
+
 
       {/* ==================================
           プレビュー本体
@@ -363,6 +413,7 @@ function Step3({
             {date}
           </div>
 
+
           <div
             style={{
               fontSize: "24px",
@@ -373,6 +424,7 @@ function Step3({
           >
             💜 {member}
           </div>
+
 
           <div
             style={{
@@ -391,6 +443,7 @@ function Step3({
           </div>
 
         </div>
+
 
         {/* ==================================
             会話
@@ -415,6 +468,7 @@ function Step3({
 
                 {msg.speaker ===
                   "メンバー" && (
+
                   <div
                     style={{
                       fontSize: "14px",
@@ -425,7 +479,9 @@ function Step3({
                   >
                     {member}
                   </div>
+
                 )}
+
 
                 <div
                   style={{
@@ -484,6 +540,7 @@ function Step3({
           )
         )}
 
+
         {/* ==================================
             終了
         ================================== */}
@@ -505,6 +562,7 @@ function Step3({
             {ending}
           </div>
 
+
           <div
             style={{
               fontSize: "6px",
@@ -519,9 +577,11 @@ function Step3({
 
       </div>
 
+
       <hr />
 
       <br />
+
 
       {/* ==================================
           ボタン
@@ -556,6 +616,7 @@ function Step3({
           ← 戻る
         </button>
 
+
         {/* 画像保存 */}
 
         <button
@@ -573,6 +634,7 @@ function Step3({
         >
           📸 画像保存
         </button>
+
 
         {/* レポ保存 */}
 
